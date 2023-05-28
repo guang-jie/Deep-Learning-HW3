@@ -7,6 +7,8 @@ from torch.utils.data import DataLoader, random_split
 import matplotlib.pyplot as plt
 import os
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
+import time
+from torchsummary import summary
 
 # Define LeNet-5 model
 class LeNet5(nn.Module):
@@ -123,6 +125,7 @@ for epoch in range(num_epochs):
 model.eval()
 test_loss = 0.0
 test_correct = 0
+start_time = time.time()
 with torch.no_grad():
     for images, labels in test_loader:
         images = images.to(device)
@@ -134,12 +137,21 @@ with torch.no_grad():
         test_loss += loss.item() * images.size(0)
         _, predicted = torch.max(outputs, 1)
         test_correct += (predicted == labels).sum().item()
+inference_time = time.time() - start_time
     
 test_loss /= len(test_dataset)
 test_accuracy = 100.0 * test_correct / len(test_dataset)
 test_accuracy_list.append(test_accuracy)
 
 print(f"Test Loss: {test_loss:.4f}, Test Accuracy: {test_accuracy:.2f}%")
+print('inference_time:', inference_time)
+
+# 輸出模型的參數量
+total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+print("Total Parameters:", total_params)
+
+# 使用 torchsummary 輸出模型的層次結構和記憶體使用量
+summary(model, input_size=(1, 28, 28))
 
 # Plot accuracy curve
 plt.plot(range(1, num_epochs+1), train_accuracy_list, label='Train')
